@@ -28,6 +28,7 @@ struct http_object {
 
     // Header Fields
     uint32_t content_length;
+    uint32_t request_id;
 };
 
 /** Create http_object
@@ -47,6 +48,7 @@ http_object *create_http(int fd) {
 
     // Header Fields
     obj->content_length = -1;
+    obj->request_id = 0;
 
     return obj;
 }
@@ -88,6 +90,10 @@ int get_contentLength(http_object *obj) {
 // Get URI
 char *get_URI(http_object *obj) {
     return obj->uri;
+}
+// Get Request ID
+int get_request_id(http_object *obj) {
+    return obj->request_id;
 }
 
 // Private helper functionality
@@ -255,6 +261,7 @@ int parse_header_field(http_object *obj, char *header_field) {
         return -400;
     }
     // Match a respective header field
+    // Content-Length
     if (strcmp(header_field, "Content-Length") == 0) {
         // Parse integer value
         obj->content_length = strtoul(val, NULL, 10);
@@ -262,7 +269,15 @@ int parse_header_field(http_object *obj, char *header_field) {
             // 400 Error - Invalid Header value
             return -400;
         }
-        return 1;
+    }
+    // RequestID
+    else if (strcmp(header_field, "RequestID") == 0) {
+        // Parse integer value
+        obj->request_id = strtoul(val, NULL, 10);
+        if (errno) {
+            // 400 Error - Invalid Header value
+            return -400;
+        }
     }
     return 1;
 }
@@ -279,7 +294,6 @@ int process_request(http_object *obj) {
     int bytes = 0, bytes_unscanned = 0, fd = obj->fd;
     char *request_line = NULL, *header_field = NULL, *ptr = NULL, *message_body = NULL;
     bool read_incomplete = true;
-    printf("First");
 
     // Request Line
     // Extract
@@ -288,7 +302,6 @@ int process_request(http_object *obj) {
         // Error occured while parsing request
         return -1 * bytes;
     }
-    printf("First");
 
     // Check that the buffer hasn't been filled by this point
     if (header_field - buff_end > 0) {
@@ -302,7 +315,6 @@ int process_request(http_object *obj) {
     if (status_line_errno != 0) {
         return status_line_errno;
     }
-    printf("First");
     // Header Field
     // Extract and Parse
     // The Header Field ends with a delimiter \r\n.
@@ -341,7 +353,6 @@ int process_request(http_object *obj) {
         // Error occured while parsing request header
         return -1 * more_headers;
     }
-    printf("First");
     // Message Body
     // Extract
     // Unscanned/read message body bytes
@@ -372,7 +383,6 @@ int process_request(http_object *obj) {
         // 400 Error - Content Length did not match Message Body length
         return 400;
     }
-    printf("First");
     // Update http object values
     obj->message_body = message_body;
 

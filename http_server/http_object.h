@@ -33,3 +33,6 @@ int get_contentLength(http_object *obj);
 
 // Get URI
 char *get_URI(http_object *obj);
+
+// Get Request ID
+int get_request_id(http_object *obj);
