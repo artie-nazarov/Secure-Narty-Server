@@ -1,2 +1,1 @@
-# Secure-Narty-Server
-SNS - Secure Narty Server
+# The Narty System (TSN)
